@@ -1,0 +1,32 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: movie-service
+
+  neo4j:
+    uri: ${SPRING_NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${SPRING_NEO4J_AUTHENTICATION_USERNAME:neo4j}
+      password: ${SPRING_NEO4J_AUTHENTICATION_PASSWORD:neo4flix123}
+
+  data:
+    neo4j:
+      repositories:
+        enabled: true
+
+jwt:
+  secret: ${JWT_SECRET:neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+logging:
+  level:
+    com.neo4flix: DEBUG
+    org.springframework.data.neo4j: INFO
