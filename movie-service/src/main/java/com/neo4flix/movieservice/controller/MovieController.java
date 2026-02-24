@@ -31,18 +31,11 @@ public class MovieController {
 
     // ─── GET /movies ──────────────────────────────────────────────────────────
     @GetMapping
-    @Operation(summary = "Lister tous les films (paginé)")
-    public ResponseEntity<ApiResponse<Page<MovieResponse>>> getAllMovies(
+    @Operation(summary = "Lister tous les films")
+    public ResponseEntity<ApiResponse<List<MovieResponse>>> getAllMovies(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "title") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
-
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(ApiResponse.ok(movieService.getAllMovies(pageable)));
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(movieService.getAllMoviesList(page, size)));
     }
 
     // ─── GET /movies/search ───────────────────────────────────────────────────

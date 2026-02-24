@@ -53,15 +53,8 @@ public interface MovieRepository extends Neo4jRepository<Movie, Long> {
            "RETURN m, collect(g), collect(d), collect(a)")
     List<Movie> findByActor(@Param("actor") String actor);
 
-    // Tous les films paginés avec relations
-    @Query(value = "MATCH (m:Movie) " +
-                   "OPTIONAL MATCH (m)-[:HAS_GENRE]->(g:Genre) " +
-                   "OPTIONAL MATCH (m)-[:DIRECTED_BY]->(d:Director) " +
-                   "OPTIONAL MATCH (m)-[:STARS]->(a:Actor) " +
-                   "RETURN m, collect(g), collect(d), collect(a) " +
-                   "SKIP $skip LIMIT $limit",
-           countQuery = "MATCH (m:Movie) RETURN count(m)")
-    Page<Movie> findAllWithRelations(Pageable pageable);
+    // Tous les films paginés (méthode native Spring Data Neo4j)
+    Page<Movie> findAll(Pageable pageable);
 
     // Top films par note moyenne
     @Query("MATCH (m:Movie) WHERE m.averageRating IS NOT NULL " +

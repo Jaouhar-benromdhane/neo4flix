@@ -62,14 +62,12 @@ public class MovieService {
         return toResponse(saved);
     }
 
-    // ─── Obtenir tous les films (paginé) ────────────────────────────────────────
+    // ─── Obtenir tous les films (liste simple) ──────────────────────────────────
     @Transactional(readOnly = true)
-    public Page<MovieResponse> getAllMovies(Pageable pageable) {
-        Page<Movie> page = movieRepository.findAllWithRelations(pageable);
-        List<MovieResponse> responses = page.getContent().stream()
+    public List<MovieResponse> getAllMoviesList(int page, int size) {
+        return movieRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return new PageImpl<>(responses, pageable, page.getTotalElements());
     }
 
     // ─── Obtenir un film par movieId ────────────────────────────────────────────
