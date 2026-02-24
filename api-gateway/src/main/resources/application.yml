@@ -1,0 +1,102 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # ─────────────────────────────────────────────────────────────
+      # GLOBALCORS : autorise le frontend Angular (port 4200)
+      # à appeler l'API sans être bloqué par le navigateur.
+      # ─────────────────────────────────────────────────────────────
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"   # Angular dev server
+              - "http://localhost:80"     # Angular en production Docker
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # ─────────────────────────────────────────────────────────────
+      # ROUTES : règles de routage
+      #
+      # Chaque route définit :
+      #   id      : nom unique de la route
+      #   uri     : où envoyer la requête (microservice cible)
+      #   predicates : conditions pour matcher la requête
+      #   filters : transformations à appliquer
+      #
+      # StripPrefix=1 : enlève le premier segment du chemin
+      #   /api/movies/...  →  /movies/...  (enlève /api)
+      # ─────────────────────────────────────────────────────────────
+      routes:
+
+        # ── movie-service ──────────────────────────────────────────
+        - id: movie-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/movies/**
+          filters:
+            - StripPrefix=1
+            # Ajoute un header pour identifier que la requête vient du gateway
+            - AddRequestHeader=X-Gateway-Source, neo4flix-gateway
+
+        # ── user-service (auth) ────────────────────────────────────
+        - id: user-service-auth
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        # ── user-service (users) ───────────────────────────────────
+        - id: user-service-users
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+
+        # ── rating-service ─────────────────────────────────────────
+        - id: rating-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/ratings/**
+          filters:
+            - StripPrefix=1
+
+        # ── recommendation-service ─────────────────────────────────
+        - id: recommendation-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/recommendations/**
+          filters:
+            - StripPrefix=1
+
+# ─────────────────────────────────────────────────────────────────
+# ACTUATOR : endpoints de monitoring
+# http://localhost:8080/actuator/health      → état du gateway
+# http://localhost:8080/actuator/gateway/routes → toutes les routes
+# ─────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.neo4flix: DEBUG
