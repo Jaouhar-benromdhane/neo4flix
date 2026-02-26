@@ -25,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final TwoFactorService twoFactorService;
 
     /**
      * Inscription d'un nouvel utilisateur.
@@ -105,6 +106,24 @@ public class AuthService {
             throw new IllegalArgumentException("Email ou mot de passe incorrect");
         }
 
+        // ── 2FA : si activée, vérifier le code TOTP ──
+        if (user.isTwoFactorEnabled()) {
+            String code = request.getTwoFactorCode();
+            if (code == null || code.isBlank()) {
+                // Mot de passe correct mais code 2FA manquant → demander le code
+                return AuthResponse.builder()
+                        .requires2FA(true)
+                        .userId(user.getUserId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build();
+            }
+            // Vérifier le code TOTP
+            if (!twoFactorService.verifyCode(user.getTwoFactorSecret(), code)) {
+                throw new IllegalArgumentException("Code 2FA invalide");
+            }
+        }
+
         // Génération du JWT
         String token = jwtUtil.generateToken(
                 user.getEmail(),
@@ -119,6 +138,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .requires2FA(false)
                 .build();
     }
 }

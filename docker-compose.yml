@@ -9,22 +9,183 @@ services:
     image: neo4j:5.15.0
     container_name: neo4flix-neo4j
     ports:
-      - "7474:7474"   # Neo4j Browser
-      - "7687:7687"   # Bolt protocol
+      - "7474:7474"
+      - "7687:7687"
     environment:
-      NEO4J_AUTH: neo4j/neo4flix123
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/neo4flix123}
       NEO4J_PLUGINS: '["graph-data-science"]'
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1G
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
-      - ./neo4j/import:/var/lib/neo4j/import
     networks:
       - neo4flix-network
     healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "neo4flix123", "RETURN 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  # ─────────────────────────────────────────────
+  # MOVIE SERVICE
+  # ─────────────────────────────────────────────
+  movie-service:
+    build: ./movie-service
+    image: neo4flix/movie-service:latest
+    container_name: neo4flix-movie
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: neo4flix123
+      JWT_SECRET: ${JWT_SECRET:-neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - neo4flix-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # ─────────────────────────────────────────────
+  # USER SERVICE
+  # ─────────────────────────────────────────────
+  user-service:
+    build: ./user-service
+    image: neo4flix/user-service:latest
+    container_name: neo4flix-user
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: neo4flix123
+      JWT_SECRET: ${JWT_SECRET:-neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+      JWT_EXPIRATION_MS: 86400000
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - neo4flix-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # RATING SERVICE
+  # ─────────────────────────────────────────────
+  rating-service:
+    build: ./rating-service
+    image: neo4flix/rating-service:latest
+    container_name: neo4flix-rating
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: neo4flix123
+      JWT_SECRET: ${JWT_SECRET:-neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - neo4flix-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # RECOMMENDATION SERVICE
+  # ─────────────────────────────────────────────
+  recommendation-service:
+    build: ./recommendation-service
+    image: neo4flix/recommendation-service:latest
+    container_name: neo4flix-recommendation
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: neo4flix123
+      JWT_SECRET: ${JWT_SECRET:-neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - neo4flix-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # API GATEWAY
+  # ─────────────────────────────────────────────
+  api-gateway:
+    build: ./api-gateway
+    image: neo4flix/api-gateway:latest
+    container_name: neo4flix-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      MOVIE_SERVICE_URL: http://movie-service:8081
+      USER_SERVICE_URL: http://user-service:8082
+      RATING_SERVICE_URL: http://rating-service:8083
+      RECOMMENDATION_SERVICE_URL: http://recommendation-service:8084
+      JWT_SECRET: ${JWT_SECRET:-neo4flix_super_secret_key_change_this_in_production_min_32_characters}
+    depends_on:
+      movie-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      rating-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+    networks:
+      - neo4flix-network
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # ANGULAR FRONTEND (Nginx)
+  # ─────────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    image: neo4flix/frontend:latest
+    container_name: neo4flix-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - neo4flix-network
+    restart: on-failure
+
+# ─────────────────────────────────────────────
+# NETWORKS & VOLUMES
+# ─────────────────────────────────────────────
+networks:
+  neo4flix-network:
+    driver: bridge
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
 
   # ─────────────────────────────────────────────
   # API GATEWAY

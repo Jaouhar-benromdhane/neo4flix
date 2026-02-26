@@ -80,6 +80,19 @@
             <version>2.3.0</version>
         </dependency>
 
+        <!-- 2FA TOTP (Google Authenticator compatible) -->
+        <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp-spring-boot-starter</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <!-- OAuth2 Client (Google login) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

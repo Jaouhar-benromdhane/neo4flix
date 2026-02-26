@@ -15,6 +15,31 @@ spring:
     neo4j:
       database: neo4j
 
+  # ── OAuth2 Google ──────────────────────────────────────────────
+  # Pour activer Google Login :
+  #   1. Créer un projet sur https://console.cloud.google.com/
+  #   2. Activer l'API Google+ / OAuth2
+  #   3. Créer des credentials (OAuth 2.0 Client ID)
+  #   4. Ajouter redirect URI : http://localhost:8082/login/oauth2/code/google
+  #   5. Renseigner les variables d'environnement GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:neo4flix_super_secret_key_change_this_in_production_min_32_characters}

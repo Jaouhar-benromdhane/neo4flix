@@ -39,8 +39,12 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Routes publiques : inscription et connexion
-                .requestMatchers("/auth/**").permitAll()
+                // Routes publiques : inscription et connexion uniquement
+                .requestMatchers("/auth/register", "/auth/login").permitAll()
+                // 2FA : nécessite d'être authentifié (JWT requis)
+                .requestMatchers("/auth/2fa/**").authenticated()
+                // OAuth2 callback : public (géré par Spring Security)
+                .requestMatchers("/auth/oauth2/**", "/oauth2/**", "/login/oauth2/**").permitAll()
                 // Swagger
                 .requestMatchers(
                     "/swagger-ui/**",
@@ -48,12 +52,15 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/api-docs/**"
                 ).permitAll()
-                // Profil personnel : tout utilisateur connecté
-                .requestMatchers("/users/me").authenticated()
+                // Profil personnel + watchlist/watched : tout utilisateur connecté
+                .requestMatchers("/users/me", "/users/me/**").authenticated()
                 // Liste des utilisateurs : ADMIN seulement
                 .requestMatchers("/users/**").hasRole("ADMIN")
                 // Tout le reste : authentifié
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/auth/oauth2/success", true)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

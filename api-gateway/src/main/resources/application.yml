@@ -1,5 +1,16 @@
 server:
   port: 8080
+  # ── HTTPS / SSL ────────────────────────────────────────────────
+  # Port 8443 pour HTTPS (certificat auto-signé en dev)
+  # En production : remplacer par un vrai certificat Let's Encrypt
+  ssl:
+    enabled: true
+    key-store: classpath:ssl/neo4flix-keystore.p12
+    key-store-password: neo4flix123
+    key-store-type: PKCS12
+    key-alias: neo4flix
+  http2:
+    enabled: true
 
 spring:
   application:
@@ -15,8 +26,10 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - "http://localhost:4200"   # Angular dev server
-              - "http://localhost:80"     # Angular en production Docker
+              - "http://localhost:4200"    # Angular dev (HTTP)
+              - "https://localhost:4200"   # Angular dev (HTTPS)
+              - "http://localhost:80"      # Angular production Docker
+              - "https://localhost:443"    # Angular production HTTPS
             allowedMethods:
               - GET
               - POST
@@ -46,7 +59,7 @@ spring:
 
         # ── movie-service ──────────────────────────────────────────
         - id: movie-service
-          uri: http://localhost:8081
+          uri: ${MOVIE_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/movies/**
           filters:
@@ -56,7 +69,7 @@ spring:
 
         # ── user-service (auth) ────────────────────────────────────
         - id: user-service-auth
-          uri: http://localhost:8082
+          uri: ${USER_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/auth/**
           filters:
@@ -64,7 +77,7 @@ spring:
 
         # ── user-service (users) ───────────────────────────────────
         - id: user-service-users
-          uri: http://localhost:8082
+          uri: ${USER_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/users/**
           filters:
@@ -72,7 +85,7 @@ spring:
 
         # ── rating-service ─────────────────────────────────────────
         - id: rating-service
-          uri: http://localhost:8083
+          uri: ${RATING_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/ratings/**
           filters:
@@ -80,7 +93,7 @@ spring:
 
         # ── recommendation-service ─────────────────────────────────
         - id: recommendation-service
-          uri: http://localhost:8084
+          uri: ${RECOMMENDATION_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/recommendations/**
           filters:

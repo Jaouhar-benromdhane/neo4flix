@@ -21,4 +21,7 @@ public class AuthResponse {
     private String username;
     private String email;
     private String role;
+
+    /** true si la 2FA est activée et que le code n'a pas encore été vérifié */
+    private boolean requires2FA;
 }

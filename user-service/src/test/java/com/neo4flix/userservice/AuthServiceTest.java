@@ -9,6 +9,7 @@ import com.neo4flix.userservice.exception.EmailAlreadyExistsException;
 import com.neo4flix.userservice.repository.UserRepository;
 import com.neo4flix.userservice.security.JwtUtil;
 import com.neo4flix.userservice.service.AuthService;
+import com.neo4flix.userservice.service.TwoFactorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class AuthServiceTest {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private TwoFactorService twoFactorService;
 
     @InjectMocks
     private AuthService authService;

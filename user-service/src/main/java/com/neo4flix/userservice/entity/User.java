@@ -57,6 +57,14 @@ public class User {
     @Property("enabled")
     private boolean enabled;
 
+    /** Double authentification (2FA) — désactivée par défaut */
+    @Property("twoFactorEnabled")
+    private boolean twoFactorEnabled;
+
+    /** Secret TOTP (base32) — jamais exposé dans les réponses API */
+    @Property("twoFactorSecret")
+    private String twoFactorSecret;
+
     @Property("createdAt")
     private LocalDateTime createdAt;
 
