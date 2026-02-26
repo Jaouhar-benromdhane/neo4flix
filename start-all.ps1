@@ -6,6 +6,15 @@
 $MVN  = "E:\DevTools\maven-mvnd-1.0.3-windows-amd64\maven-mvnd-1.0.3-windows-amd64\mvn\bin"
 $ROOT = "E:\pZone01\neo4flix"
 
+# Charger les variables d'environnement depuis .env (non commité)
+$envFile = "$ROOT\.env"
+if (Test-Path $envFile) {
+    Get-Content $envFile | Where-Object { $_ -match "^\s*[^#]" -and $_ -match "=" } | ForEach-Object {
+        $parts = $_ -split "=", 2
+        [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), "Process")
+    }
+}
+
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "   NEO4FLIX - DEMARRAGE COMPLET"            -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
