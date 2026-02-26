@@ -39,13 +39,47 @@ Write-Host "      [OK] Docker pret" -ForegroundColor Green
 
 # 1. Neo4j
 Write-Host "`n[1/7] Demarrage Neo4j..." -ForegroundColor Yellow
+
+# Tentative 1 : demarrage normal
 docker start neo4flix-neo4j | Out-Null
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 6
 $neo4jStatus = docker ps --filter "name=neo4flix-neo4j" --format "{{.Status}}"
+
+# Si echec -> probable fichier PID bloque -> on recrée le container
+if (-not ($neo4jStatus -like "Up*")) {
+    Write-Host "      [WARN] Neo4j crash detecte - correction du fichier PID bloque..." -ForegroundColor Yellow
+
+    # Recuperer les volumes du container
+    $mounts = docker inspect neo4flix-neo4j --format "{{range .Mounts}}{{.Name}}:{{.Destination}} {{end}}" 2>$null
+    $dataVol = ""
+    $logsVol = ""
+    foreach ($m in $mounts.Split(" ")) {
+        if ($m -like "*:/data") { $dataVol = $m.Split(":")[0] }
+        if ($m -like "*:/logs") { $logsVol = $m.Split(":")[0] }
+    }
+
+    if ($dataVol -and $logsVol) {
+        Write-Host "      Suppression du PID bloque..." -ForegroundColor Gray
+        docker run --rm --volumes-from neo4flix-neo4j --entrypoint sh neo4j:5.15.0 -c "rm -f /var/lib/neo4j/run/*.pid /var/run/neo4j/*.pid 2>/dev/null; echo done" | Out-Null
+
+        Write-Host "      Recreation du container Neo4j..." -ForegroundColor Gray
+        docker rm neo4flix-neo4j | Out-Null
+        docker run -d --name neo4flix-neo4j `
+            -p 7474:7474 -p 7687:7687 `
+            -e NEO4J_AUTH=neo4j/neo4flix123 `
+            -v "${dataVol}:/data" `
+            -v "${logsVol}:/logs" `
+            neo4j:5.15.0 | Out-Null
+
+        Start-Sleep -Seconds 10
+        $neo4jStatus = docker ps --filter "name=neo4flix-neo4j" --format "{{.Status}}"
+    }
+}
+
 if ($neo4jStatus -like "Up*") {
     Write-Host "      [OK] Neo4j - http://localhost:7474" -ForegroundColor Green
 } else {
-    Write-Host "      [ERREUR] Neo4j n'a pas demarre !" -ForegroundColor Red
+    Write-Host "      [ERREUR] Neo4j n'a pas demarre meme apres correction !" -ForegroundColor Red
     exit 1
 }
 
