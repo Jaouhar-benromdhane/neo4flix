@@ -10,6 +10,33 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "   NEO4FLIX - DEMARRAGE COMPLET"            -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 
+# 0. Docker Desktop
+Write-Host "`n[0/7] Verification Docker Desktop..." -ForegroundColor Yellow
+$dockerRunning = Get-Process -Name "Docker Desktop" -ErrorAction SilentlyContinue
+if (-not $dockerRunning) {
+    Write-Host "      Docker Desktop non lance, demarrage..." -ForegroundColor Yellow
+    Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+    Write-Host "      Attente demarrage Docker Desktop (30s)..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 30
+} else {
+    Write-Host "      [OK] Docker Desktop deja en cours d'execution" -ForegroundColor Green
+}
+# Attendre que le daemon Docker soit pret
+$dockerReady = $false
+for ($i = 0; $i -lt 12; $i++) {
+    try {
+        docker info 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) { $dockerReady = $true; break }
+    } catch {}
+    Write-Host "      Attente daemon Docker..." -ForegroundColor Gray
+    Start-Sleep -Seconds 5
+}
+if (-not $dockerReady) {
+    Write-Host "      [ERREUR] Docker daemon non disponible !" -ForegroundColor Red
+    exit 1
+}
+Write-Host "      [OK] Docker pret" -ForegroundColor Green
+
 # 1. Neo4j
 Write-Host "`n[1/7] Demarrage Neo4j..." -ForegroundColor Yellow
 docker start neo4flix-neo4j | Out-Null

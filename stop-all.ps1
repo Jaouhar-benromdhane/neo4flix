@@ -59,8 +59,16 @@ foreach ($port in $ports) {
 
 Write-Host ""
 if ($allClear) {
-    Write-Host "   TOUT EST ARRETE PROPREMENT !" -ForegroundColor Green
+Write-Host "   TOUT EST ARRETE PROPREMENT !" -ForegroundColor Green
 } else {
     Write-Host "   Certains ports encore utilises (Nexus ou autre app)" -ForegroundColor Yellow
 }
 Write-Host "============================================" -ForegroundColor Cyan
+
+# Optionnel : arreter Docker Desktop
+$choice = Read-Host "`nVoulez-vous aussi arreter Docker Desktop ? (o/N)"
+if ($choice -eq 'o' -or $choice -eq 'O') {
+    Write-Host "Arret de Docker Desktop..." -ForegroundColor Yellow
+    Get-Process -Name "Docker Desktop" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Write-Host "[OK] Docker Desktop arrete" -ForegroundColor Green
+}
