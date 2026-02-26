@@ -1,10 +1,11 @@
 server:
   port: 8080
   # ── HTTPS / SSL ────────────────────────────────────────────────
-  # Port 8443 pour HTTPS (certificat auto-signé en dev)
-  # En production : remplacer par un vrai certificat Let's Encrypt
+  # Pour activer HTTPS en production : passer ssl.enabled à true
+  # et fournir un vrai certificat (Let's Encrypt ou CA officielle).
+  # En dev, on laisse HTTP pour éviter les erreurs de certificat auto-signé.
   ssl:
-    enabled: true
+    enabled: true    # Certificat auto-signé — accepter dans le navigateur
     key-store: classpath:ssl/neo4flix-keystore.p12
     key-store-password: neo4flix123
     key-store-type: PKCS12

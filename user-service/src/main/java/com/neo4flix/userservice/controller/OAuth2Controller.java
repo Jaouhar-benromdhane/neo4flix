@@ -1,6 +1,5 @@
 package com.neo4flix.userservice.controller;
 
-import com.neo4flix.userservice.dto.AuthResponse;
 import com.neo4flix.userservice.entity.Role;
 import com.neo4flix.userservice.entity.User;
 import com.neo4flix.userservice.repository.UserRepository;
@@ -8,10 +7,12 @@ import com.neo4flix.userservice.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 import java.util.List;
 
@@ -45,10 +46,11 @@ public class OAuth2Controller {
      * @return JWT Neo4flix
      */
     @GetMapping("/success")
-    @Operation(summary = "Callback OAuth2 Google", description = "Retourne un JWT après authentification Google")
-    public ResponseEntity<AuthResponse> oauth2Success(@AuthenticationPrincipal OAuth2User oauth2User) {
+    @Operation(summary = "Callback OAuth2 Google", description = "Redirige vers Angular avec le JWT après authentification Google")
+    public void oauth2Success(@AuthenticationPrincipal OAuth2User oauth2User, HttpServletResponse response) throws IOException {
         if (oauth2User == null) {
-            return ResponseEntity.status(401).build();
+            response.sendRedirect("https://localhost:4200/login?error=oauth2");
+            return;
         }
 
         String email = oauth2User.getAttribute("email");
@@ -74,13 +76,17 @@ public class OAuth2Controller {
                 user.getUserId()
         );
 
-        return ResponseEntity.ok(AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .build());
+        // Rediriger vers Angular avec le token en query param
+        String userId   = user.getUserId();
+        String username = user.getUsername();
+        String role     = user.getRole();
+        response.sendRedirect(
+            "https://localhost:4200/oauth2-callback" +
+            "?token=" + token +
+            "&userId=" + userId +
+            "&username=" + username +
+            "&email=" + email +
+            "&role=" + role
+        );
     }
 }

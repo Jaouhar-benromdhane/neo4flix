@@ -17,6 +17,8 @@ import { AuthService } from '../../services/auth.service';
         <a routerLink="/recommendations" routerLinkActive="active">Recommandations</a>
         @if (auth.isLoggedIn()) {
           <a routerLink="/my-ratings" routerLinkActive="active">Mes notes</a>
+          <a routerLink="/watchlist" routerLinkActive="active">Ma liste</a>
+          <a routerLink="/profile" routerLinkActive="active">Profil</a>
           <span class="user-info">{{ auth.currentUser()?.username }}</span>
           @if (auth.isAdmin()) {
             <span class="badge-admin">ADMIN</span>

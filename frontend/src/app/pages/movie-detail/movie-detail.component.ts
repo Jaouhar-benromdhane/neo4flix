@@ -6,6 +6,7 @@ import { MovieService } from '../../services/movie.service';
 import { RatingService } from '../../services/rating.service';
 import { RecommendationService } from '../../services/recommendation.service';
 import { AuthService } from '../../services/auth.service';
+import { WatchlistService } from '../../services/watchlist.service';
 import { Movie } from '../../models/movie.model';
 import { Rating } from '../../models/rating.model';
 import { Recommendation } from '../../models/recommendation.model';
@@ -58,6 +59,18 @@ import { Recommendation } from '../../models/recommendation.model';
               </p>
             }
             <p class="synopsis">{{ movie()!.synopsis }}</p>
+
+            <!-- Watchlist buttons -->
+            @if (auth.isLoggedIn()) {
+              <div class="watchlist-actions">
+                <button class="btn-watch" [class.active]="isWatched()" (click)="toggleWatched()">
+                  {{ isWatched() ? '✅ Vu' : '👁 Marquer comme vu' }}
+                </button>
+                <button class="btn-save" [class.active]="isSaved()" (click)="toggleSaved()">
+                  {{ isSaved() ? '🔖 Sauvegardé' : '+ Sauvegarder' }}
+                </button>
+              </div>
+            }
           </div>
         </div>
 
@@ -185,6 +198,17 @@ import { Recommendation } from '../../models/recommendation.model';
     .similar-card:hover { border-color: #e50914; }
     .similar-title { color: #fff; font-size: 0.9rem; margin-bottom: 0.3rem; }
     .similar-year { color: #888; font-size: 0.8rem; }
+    .watchlist-actions { display: flex; gap: 0.8rem; margin-top: 1.2rem; flex-wrap: wrap; }
+    .btn-watch, .btn-save {
+      padding: 0.6rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: 0.9rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-watch { background: #1a1a1a; border: 1px solid #555; color: #ccc; }
+    .btn-watch.active { background: #1a3a1a; border-color: #4caf50; color: #4caf50; }
+    .btn-watch:hover { border-color: #4caf50; color: #4caf50; }
+    .btn-save { background: #1a1a1a; border: 1px solid #555; color: #ccc; }
+    .btn-save.active { background: #1a2a3a; border-color: #2196f3; color: #2196f3; }
+    .btn-save:hover { border-color: #2196f3; color: #2196f3; }
     @media (max-width: 700px) {
       .movie-hero { flex-direction: column; }
       .hero-poster { width: 100%; max-width: 300px; }
@@ -200,6 +224,8 @@ export class MovieDetailComponent implements OnInit {
   ratingLoading = signal(false);
   ratingSuccess = signal(false);
   ratingError = signal('');
+  isWatched = signal(false);
+  isSaved = signal(false);
   ratingForm: FormGroup;
 
   constructor(
@@ -208,6 +234,7 @@ export class MovieDetailComponent implements OnInit {
     private ratingService: RatingService,
     private recService: RecommendationService,
     public auth: AuthService,
+    private watchlistService: WatchlistService,
     private fb: FormBuilder
   ) {
     this.ratingForm = this.fb.group({
@@ -232,9 +259,41 @@ export class MovieDetailComponent implements OnInit {
         this.loading.set(false);
         this.loadRatings(id);
         this.loadSimilar(id);
+        if (this.auth.isLoggedIn()) {
+          this.loadWatchlistStatus(id);
+        }
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  loadWatchlistStatus(id: string): void {
+    this.watchlistService.getWatched().subscribe({
+      next: (movies) => this.isWatched.set(movies.some(m => m.movieId === id)),
+      error: () => {}
+    });
+    this.watchlistService.getSaved().subscribe({
+      next: (movies) => this.isSaved.set(movies.some(m => m.movieId === id)),
+      error: () => {}
+    });
+  }
+
+  toggleWatched(): void {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    if (this.isWatched()) {
+      this.watchlistService.removeWatched(id).subscribe(() => this.isWatched.set(false));
+    } else {
+      this.watchlistService.markWatched(id).subscribe(() => this.isWatched.set(true));
+    }
+  }
+
+  toggleSaved(): void {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    if (this.isSaved()) {
+      this.watchlistService.unsaveMovie(id).subscribe(() => this.isSaved.set(false));
+    } else {
+      this.watchlistService.saveMovie(id).subscribe(() => this.isSaved.set(true));
+    }
   }
 
   loadRatings(id: string): void {

@@ -30,7 +30,7 @@ export class AuthService {
   login(data: LoginRequest): Observable<AuthResponse> {
     return this.http.post<ApiResponse<AuthResponse>>(`${environment.apiUrl}/auth/login`, data).pipe(
       map(r => r.data),
-      tap(res => this.saveSession(res))
+      tap(res => { if (!res.requires2FA && res.token) this.saveSession(res); })
     );
   }
 
@@ -39,6 +39,13 @@ export class AuthService {
     localStorage.removeItem(this.USER_KEY);
     this._currentUser.set(null);
     this.router.navigate(['/login']);
+  }
+
+  saveSessionFromOAuth2(res: { token: string; userId: string; username: string; email: string; role: string }): void {
+    localStorage.setItem(this.TOKEN_KEY, res.token);
+    const user: User = { userId: res.userId, username: res.username, email: res.email, role: res.role };
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    this._currentUser.set(user);
   }
 
   getToken(): string | null {

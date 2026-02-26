@@ -7,6 +7,7 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+  twoFactorCode?: string;
 }
 
 export interface AuthResponse {
@@ -15,6 +16,7 @@ export interface AuthResponse {
   username: string;
   email: string;
   role: string;
+  requires2FA?: boolean;
 }
 
 export interface User {

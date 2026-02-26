@@ -110,7 +110,7 @@ Start-Sleep -Seconds 2
 
 # 7. Frontend Angular
 Write-Host "[7/7] Demarrage Frontend Angular (4200)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd $ROOT\frontend; ng serve"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd $ROOT\frontend; ng serve --ssl"
 
 # Attente
 Write-Host "`nAttente du demarrage des services (60s)..." -ForegroundColor Cyan
@@ -131,7 +131,7 @@ foreach ($port in $ports) {
 }
 
 Write-Host "`n============================================" -ForegroundColor Cyan
-Write-Host "   Frontend : http://localhost:4200"           -ForegroundColor White
+Write-Host "   Frontend : https://localhost:4200"          -ForegroundColor White
 Write-Host "   Gateway  : http://localhost:8080/api"       -ForegroundColor White
 Write-Host "   Neo4j UI : http://localhost:7474"           -ForegroundColor White
 Write-Host "============================================"  -ForegroundColor Cyan
