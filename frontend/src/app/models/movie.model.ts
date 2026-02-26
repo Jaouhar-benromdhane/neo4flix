@@ -1,27 +1,16 @@
 export interface Movie {
   movieId: string;
   title: string;
-  year: number;
+  releaseYear: number;
   synopsis: string;
   posterUrl: string;
+  language: string;
+  duration: number;
   averageRating: number;
   totalRatings: number;
-  genres: Genre[];
-  directors: Director[];
-  actors: Actor[];
-}
-
-export interface Genre {
-  name: string;
-}
-
-export interface Director {
-  name: string;
-}
-
-export interface Actor {
-  name: string;
-  character: string;
+  genres: string[];
+  directors: string[];
+  actors: string[];
 }
 
 export interface CreateMovieRequest {

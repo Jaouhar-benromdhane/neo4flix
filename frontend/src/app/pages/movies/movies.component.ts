@@ -40,15 +40,15 @@ import { Movie } from '../../models/movie.model';
             <div class="movie-info">
               <h3>{{ movie.title }}</h3>
               <p class="movie-meta">
-                <span class="year">{{ movie.year }}</span>
+                <span class="year">{{ movie.releaseYear }}</span>
                 @if (movie.averageRating > 0) {
                   <span class="rating">⭐ {{ movie.averageRating | number:'1.1-1' }}</span>
                 }
               </p>
               @if (movie.genres?.length) {
                 <div class="genres">
-                  @for (g of movie.genres.slice(0, 2); track g.name) {
-                    <span class="genre-tag">{{ g.name }}</span>
+                  @for (g of movie.genres.slice(0, 2); track g) {
+                    <span class="genre-tag">{{ g }}</span>
                   }
                 </div>
               }
@@ -140,7 +140,7 @@ export class MoviesComponent implements OnInit {
     } else {
       this.movies.set(this.allMovies.filter(m =>
         m.title.toLowerCase().includes(q) ||
-        m.genres?.some(g => g.name.toLowerCase().includes(q))
+        m.genres?.some(g => g.toLowerCase().includes(q))
       ));
     }
   }

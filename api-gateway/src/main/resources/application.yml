@@ -26,6 +26,10 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
 
+      # Supprime les headers CORS en double (gateway + microservice)
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
       # ─────────────────────────────────────────────────────────────
       # ROUTES : règles de routage
       #

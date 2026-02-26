@@ -32,7 +32,7 @@ import { Recommendation } from '../../models/recommendation.model';
           <div class="hero-details">
             <h1>{{ movie()!.title }}</h1>
             <div class="meta-row">
-              <span class="year">{{ movie()!.year }}</span>
+              <span class="year">{{ movie()!.releaseYear }}</span>
               @if (movie()!.averageRating > 0) {
                 <span class="avg-rating">⭐ {{ movie()!.averageRating | number:'1.1-1' }} / 10</span>
                 <span class="vote-count">({{ movie()!.totalRatings }} votes)</span>
@@ -40,8 +40,8 @@ import { Recommendation } from '../../models/recommendation.model';
             </div>
             @if (movie()!.genres?.length) {
               <div class="genres">
-                @for (g of movie()!.genres; track g.name) {
-                  <span class="genre-tag">{{ g.name }}</span>
+                @for (g of movie()!.genres; track g) {
+                  <span class="genre-tag">{{ g }}</span>
                 }
               </div>
             }
@@ -217,11 +217,11 @@ export class MovieDetailComponent implements OnInit {
   }
 
   directorNames(): string {
-    return (this.movie()?.directors || []).map(d => d.name).join(', ');
+    return (this.movie()?.directors || []).join(', ');
   }
 
   actorNames(): string {
-    return (this.movie()?.actors || []).slice(0, 4).map(a => a.name).join(', ');
+    return (this.movie()?.actors || []).slice(0, 4).join(', ');
   }
 
   ngOnInit(): void {

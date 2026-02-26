@@ -1,9 +1,12 @@
-import { Injectable, signal, computed } from '@angular/core';
+﻿import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse, User } from '../models/user.model';
+
+interface ApiResponse<T> { success: boolean; message: string; data: T; }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -18,13 +21,15 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, data).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(`${environment.apiUrl}/auth/register`, data).pipe(
+      map(r => r.data),
       tap(res => this.saveSession(res))
     );
   }
 
   login(data: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, data).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(`${environment.apiUrl}/auth/login`, data).pipe(
+      map(r => r.data),
       tap(res => this.saveSession(res))
     );
   }
